@@ -1,0 +1,221 @@
+CREATE TABLE users (
+    user_id SERIAL PRIMARY KEY,
+    username VARCHAR(50),
+    email VARCHAR(100),
+    password VARCHAR(100),
+    mobile_number VARCHAR(15),
+    is_active BOOLEAN,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE account (
+    account_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    account_no VARCHAR(20),
+    account_type VARCHAR(20),
+    opening_date DATE,
+    status VARCHAR(20),
+    curr_bal DECIMAL(15,2),
+    created_at TIMESTAMP,
+    ifsc_code VARCHAR(15),
+    bankname VARCHAR(50)
+);
+
+CREATE TABLE account_preferences (
+    account_preference_id SERIAL PRIMARY KEY,
+    account_id INT REFERENCES account(account_id),
+    account_nickname VARCHAR(50),
+    created_at TIMESTAMP,
+    updated_at TIMESTAMP
+);
+
+CREATE TABLE beneficiaries (
+    beneficiary_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    to_account_id INT,
+    to_bank_name VARCHAR(50),
+    to_ifsc_code VARCHAR(15),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE account_transactions (
+    account_transactions_ref_id SERIAL PRIMARY KEY,
+    debit_account_no VARCHAR(20),
+    credit_account_no VARCHAR(20),
+    upi_ref VARCHAR(50),
+    time_stamp TIMESTAMP,
+    payment_mode VARCHAR(20),
+    description TEXT,
+    transaction_type VARCHAR(10),
+    amount DECIMAL(15,2),
+    created_at TIMESTAMP,
+    status VARCHAR(20)
+);
+
+CREATE TABLE user_mfa (
+    user_mfa_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    method VARCHAR(20),
+    destn VARCHAR(50),
+    is_enabled BOOLEAN,
+    created_at TIMESTAMP,
+    code VARCHAR(10),
+    expires_at TIMESTAMP,
+    consumed BOOLEAN
+);
+
+CREATE TABLE loans (
+    loan_id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(user_id),
+    debt_amount DECIMAL(15,2),
+    creation_date DATE,
+    remaining_amount DECIMAL(15,2),
+    monthly_payment DECIMAL(10,2),
+    interest_rate DECIMAL(5,2),
+    created_at TIMESTAMP
+);
+
+
+
+
+
+-------------------------------------------------------------
+Users
+
+INSERT INTO users (username, email, password, mobile_number, is_active, created_at) VALUES
+('john_doe', 'john@example.com', 'hashed_pw1', '9876543210', true, NOW()),
+('alice_w', 'alice@example.com', 'hashed_pw2', '9123456789', true, NOW()),
+('bob_k', 'bob@example.com', 'hashed_pw3', '9988776655', false, NOW()),
+('sara_m', 'sara@example.com', 'hashed_pw4', '9001122334', true, NOW()),
+('david_p', 'david@example.com', 'hashed_pw5', '9345678901', true, NOW());
+
+
+
+Accounts
+
+INSERT INTO account (user_id, account_no, account_type, opening_date, status, curr_bal, created_at, ifsc_code, bankname) VALUES
+(1, 'ACC1001', 'Savings', '2022-01-15', 'Active', 50000.75, NOW(), 'CBA001', 'CommBank'),
+(2, 'ACC1002', 'Checking', '2021-12-01', 'Active', 20000.00, NOW(), 'CBA002', 'CommBank'),
+(3, 'ACC1003', 'Savings', '2023-03-10', 'Inactive', 1200.00, NOW(), 'CBA003', 'CommBank'),
+(4, 'ACC1004', 'Current', '2022-05-20', 'Active', 75000.00, NOW(), 'CBA004', 'CommBank'),
+(5, 'ACC1005', 'Savings', '2021-07-11', 'Active', 150000.50, NOW(), 'CBA005', 'CommBank');
+
+
+Account Preferences
+
+INSERT INTO account_preferences (account_id, account_nickname, created_at, updated_at) VALUES
+(1, 'My Salary Account', NOW(), NOW()),
+(2, 'Daily Expenses', NOW(), NOW()),
+(3, 'Emergency Fund', NOW(), NOW()),
+(4, 'Business Current', NOW(), NOW()),
+(5, 'Investment Savings', NOW(), NOW());
+
+
+
+Beneficiaries
+
+INSERT INTO beneficiaries (user_id, to_account_id, to_bank_name, to_ifsc_code, created_at) VALUES
+(1, 2, 'CommBank', 'CBA002', NOW()),
+(2, 3, 'CommBank', 'CBA003', NOW()),
+(3, 1, 'CommBank', 'CBA001', NOW()),
+(4, 5, 'CommBank', 'CBA005', NOW()),
+(5, 4, 'CommBank', 'CBA004', NOW());
+
+
+Transactions
+
+INSERT INTO account_transactions (debit_account_no, credit_account_no, upi_ref, time_stamp, payment_mode, description, transaction_type, amount, created_at, status) VALUES
+('ACC1001', 'ACC1002', 'UPI12345', NOW(), 'UPI', 'Rent Payment', 'debit', 12000.00, NOW(), 'Success'),
+('ACC1002', 'ACC1003', 'UPI54321', NOW(), 'NEFT', 'Bill Payment', 'debit', 500.00, NOW(), 'Success'),
+('ACC1003', 'ACC1001', 'UPI67890', NOW(), 'UPI', 'Refund', 'credit', 200.00, NOW(), 'Success'),
+('ACC1004', 'ACC1005', 'UPI13579', NOW(), 'IMPS', 'Loan EMI', 'debit', 7500.00, NOW(), 'Pending'),
+('ACC1005', 'ACC1004', 'UPI24680', NOW(), 'UPI', 'Business Payment', 'credit', 50000.00, NOW(), 'Success');
+
+User MFA
+
+INSERT INTO user_mfa (user_id, method, destn, is_enabled, created_at, code, expires_at, consumed) VALUES
+(1, 'SMS', '9876543210', true, NOW(), '123456', NOW() + interval '5 minutes', false),
+(2, 'Email', 'alice@example.com', true, NOW(), '654321', NOW() + interval '10 minutes', false),
+(3, 'App', 'bob_k_device', false, NOW(), '111111', NOW() + interval '15 minutes', true),
+(4, 'SMS', '9001122334', true, NOW(), '222222', NOW() + interval '5 minutes', false),
+(5, 'Email', 'david@example.com', true, NOW(), '333333', NOW() + interval '10 minutes', false);
+
+Loans
+
+INSERT INTO loans (user_id, debt_amount, creation_date, remaining_amount, monthly_payment, interest_rate, created_at) VALUES
+(1, 500000.00, '2022-01-01', 400000.00, 15000.00, 8.5, NOW()),
+(2, 200000.00, '2021-12-01', 100000.00, 10000.00, 7.2, NOW()),
+(3, 100000.00, '2023-03-01', 95000.00, 5000.00, 9.0, NOW()),
+(4, 750000.00, '2022-05-01', 500000.00, 20000.00, 6.8, NOW()),
+(5, 1500000.00, '2021-07-01', 1200000.00, 25000.00, 8.0, NOW());
+
+
+
+------------------------------------------------------------
+
+
+| user\_id | username  | email                                         | password    | mobile\_number | is\_active | created\_at |
+| -------- | --------- | --------------------------------------------- | ----------- | -------------- | ---------- | ----------- |
+| 1        | john\_doe | [john@example.com](mailto:john@example.com)   | hashed\_pw1 | 9876543210     | TRUE       | NOW()       |
+| 2        | alice\_w  | [alice@example.com](mailto:alice@example.com) | hashed\_pw2 | 9123456789     | TRUE       | NOW()       |
+| 3        | bob\_k    | [bob@example.com](mailto:bob@example.com)     | hashed\_pw3 | 9988776655     | FALSE      | NOW()       |
+| 4        | sara\_m   | [sara@example.com](mailto:sara@example.com)   | hashed\_pw4 | 9001122334     | TRUE       | NOW()       |
+| 5        | david\_p  | [david@example.com](mailto:david@example.com) | hashed\_pw5 | 9345678901     | TRUE       | NOW()       |
+
+
+
+| account\_id | user\_id | account\_no | account\_type | opening\_date | status   | curr\_bal | created\_at | ifsc\_code | bankname |
+| ----------- | -------- | ----------- | ------------- | ------------- | -------- | --------- | ----------- | ---------- | -------- |
+| 1           | 1        | ACC1001     | Savings       | 2022-01-15    | Active   | 50000.75  | NOW()       | CBA001     | CommBank |
+| 2           | 2        | ACC1002     | Checking      | 2021-12-01    | Active   | 20000.00  | NOW()       | CBA002     | CommBank |
+| 3           | 3        | ACC1003     | Savings       | 2023-03-10    | Inactive | 1200.00   | NOW()       | CBA003     | CommBank |
+| 4           | 4        | ACC1004     | Current       | 2022-05-20    | Active   | 75000.00  | NOW()       | CBA004     | CommBank |
+| 5           | 5        | ACC1005     | Savings       | 2021-07-11    | Active   | 150000.50 | NOW()       | CBA005     | CommBank |
+
+
+| account\_preference\_id | account\_id | account\_nickname  | created\_at | updated\_at |
+| ----------------------- | ----------- | ------------------ | ----------- | ----------- |
+| 1                       | 1           | My Salary Account  | NOW()       | NOW()       |
+| 2                       | 2           | Daily Expenses     | NOW()       | NOW()       |
+| 3                       | 3           | Emergency Fund     | NOW()       | NOW()       |
+| 4                       | 4           | Business Current   | NOW()       | NOW()       |
+| 5                       | 5           | Investment Savings | NOW()       | NOW()       |
+
+
+
+| beneficiary\_id | user\_id | to\_account\_id | to\_bank\_name | to\_ifsc\_code | created\_at |
+| --------------- | -------- | --------------- | -------------- | -------------- | ----------- |
+| 1               | 1        | 2               | CommBank       | CBA002         | NOW()       |
+| 2               | 2        | 3               | CommBank       | CBA003         | NOW()       |
+| 3               | 3        | 1               | CommBank       | CBA001         | NOW()       |
+| 4               | 4        | 5               | CommBank       | CBA005         | NOW()       |
+| 5               | 5        | 4               | CommBank       | CBA004         | NOW()       |
+
+
+
+| account\_transactions\_ref\_id | debit\_account\_no | credit\_account\_no | upi\_ref | time\_stamp | payment\_mode | description      | transaction\_type | amount   | created\_at | status  |
+| ------------------------------ | ------------------ | ------------------- | -------- | ----------- | ------------- | ---------------- | ----------------- | -------- | ----------- | ------- |
+| 1                              | ACC1001            | ACC1002             | UPI12345 | NOW()       | UPI           | Rent Payment     | debit             | 12000.00 | NOW()       | Success |
+| 2                              | ACC1002            | ACC1003             | UPI54321 | NOW()       | NEFT          | Bill Payment     | debit             | 500.00   | NOW()       | Success |
+| 3                              | ACC1003            | ACC1001             | UPI67890 | NOW()       | UPI           | Refund           | credit            | 200.00   | NOW()       | Success |
+| 4                              | ACC1004            | ACC1005             | UPI13579 | NOW()       | IMPS          | Loan EMI         | debit             | 7500.00  | NOW()       | Pending |
+| 5                              | ACC1005            | ACC1004             | UPI24680 | NOW()       | UPI           | Business Payment | credit            | 50000.00 | NOW()       | Success |
+
+
+
+| user\_mfa\_id | user\_id | method | destn                                         | is\_enabled | created\_at | code   | expires\_at        | consumed |
+| ------------- | -------- | ------ | --------------------------------------------- | ----------- | ----------- | ------ | ------------------ | -------- |
+| 1             | 1        | SMS    | 9876543210                                    | TRUE        | NOW()       | 123456 | NOW() + 5 minutes  | FALSE    |
+| 2             | 2        | Email  | [alice@example.com](mailto:alice@example.com) | TRUE        | NOW()       | 654321 | NOW() + 10 minutes | FALSE    |
+| 3             | 3        | App    | bob\_k\_device                                | FALSE       | NOW()       | 111111 | NOW() + 15 minutes | TRUE     |
+| 4             | 4        | SMS    | 9001122334                                    | TRUE        | NOW()       | 222222 | NOW() + 5 minutes  | FALSE    |
+| 5             | 5        | Email  | [david@example.com](mailto:david@example.com) | TRUE        | NOW()       | 333333 | NOW() + 10 minutes | FALSE    |
+
+
+| loan\_id | user\_id | debt\_amount | creation\_date | remaining\_amount | monthly\_payment | interest\_rate | created\_at |
+| -------- | -------- | ------------ | -------------- | ----------------- | ---------------- | -------------- | ----------- |
+| 1        | 1        | 500000.00    | 2022-01-01     | 400000.00         | 15000.00         | 8.5            | NOW()       |
+| 2        | 2        | 200000.00    | 2021-12-01     | 100000.00         | 10000.00         | 7.2            | NOW()       |
+| 3        | 3        | 100000.00    | 2023-03-01     | 95000.00          | 5000.00          | 9.0            | NOW()       |
+| 4        | 4        | 750000.00    | 2022-05-01     | 500000.00         | 20000.00         | 6.8            | NOW()       |
+| 5        | 5        | 1500000.00   | 2021-07-01     | 1200000.00        | 25000.00         | 8.0            | NOW()       |
